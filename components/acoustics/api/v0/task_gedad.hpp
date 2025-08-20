@@ -10,6 +10,8 @@
 #include "hal/device.hpp"
 #include "hal/sensor.hpp"
 
+#include "lorawan.h"
+
 #include <algorithm>
 #include <array>
 #include <atomic>
@@ -67,6 +69,13 @@ namespace shared {
 
     inline int abnormal_output_gpio = -1;
     inline int abnormal_output_gpio_value = 1;
+
+    // LoRaWAN
+    inline std::mutex lorawan_mutex;
+    inline std::string lorawan_eui = "";
+    inline std::string lorawan_join_eui = "";
+    inline std::string lorawan_app_key = "";
+    inline std::string lorawan_freq = "";
 
 } // namespace shared
 
@@ -776,6 +785,10 @@ struct TaskGEDAD final
                         auto anom_cls = cls_data.writer<core::ArrayWriter>();
                         anom_cls << 1 << static_cast<float>(_anomaly_score);
                     }
+
+                    // push to lorawan queue
+                    const float anomaly_threshold = std::max(0.0f, std::min(shared::anomaly_threshold.load(), 1.0f));
+                    lorawan_enqueue(_anomaly_score >= anomaly_threshold);
                 }
                 data["perfMs"] += _perf_ms;
             }

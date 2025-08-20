@@ -11,3 +11,7 @@ dependencies:
     version: ">=2.11.1"
     path: porting/driver/littlefs
   espressif/esp-tflite-micro: '*'
+  lorawan:
+    path: ../lorawan
+  lora-porting:
+    path: ../lora-porting

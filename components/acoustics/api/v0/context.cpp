@@ -1,7 +1,9 @@
 #include "common.hpp"
+#include "lorawan.h"
 
 #include "cmd_break.hpp"
 #include "cmd_cfggedad.hpp"
+#include "cmd_cfglorawan.hpp"
 #include "cmd_rst.hpp"
 #include "cmd_start.hpp"
 #include "cmd_traingedad.hpp"
@@ -38,6 +40,38 @@ static bool preInitHooks()
     v0::CmdCfgGEDAD::preInitHook();
     v0::CmdTrainGEDAD::preInitHook();
     v0::CmdStart::preInitHook();
+    v0::CmdCfgLoRaWAN::preInitHook();
+
+    // 1. read config from device
+    //     std::lock_guard<std::mutex> lock(v0::shared::lorawan_mutex);
+    //     auto &lorawan_eui = v0::shared::lorawan_eui;
+    //     auto &lorawan_join_eui = v0::shared::lorawan_join_eui;
+    //     auto &lorawan_app_key = v0::shared::lorawan_app_key;
+    //     auto &lorawan_freq = v0::shared::lorawan_freq;
+    // 2. check config, init queue/flag
+    // 3. launch lorawan threads
+    {
+        std::lock_guard<std::mutex> lock(v0::shared::lorawan_mutex);
+        auto &lorawan_eui = v0::shared::lorawan_eui;
+        auto &lorawan_join_eui = v0::shared::lorawan_join_eui;
+        auto &lorawan_app_key = v0::shared::lorawan_app_key;
+        auto &lorawan_freq = v0::shared::lorawan_freq;
+
+        do {
+            if (lorawan_eui.empty() || lorawan_join_eui.empty() || lorawan_app_key.empty() || lorawan_freq.empty())
+            {
+                LOG(ERROR, "LoRaWAN configuration is incomplete, please configure it first");
+                break;
+            }
+            if (lorawan_eui.length() != 16 || lorawan_join_eui.length() != 16 ||
+                lorawan_app_key.length() != 32 || lorawan_freq.length() < 5)
+            {
+                LOG(ERROR, "LoRaWAN configuration is invalid, please check the values");
+                break;
+            }
+            lorawan_init(lorawan_eui.c_str(), lorawan_join_eui.c_str(), lorawan_app_key.c_str(), lorawan_freq.c_str());
+        } while (false);
+    }
 
     return true;
 }
@@ -50,6 +84,7 @@ static bool registerCommands()
     [[maybe_unused]] static auto start_cmd = v0::CmdStart();
     [[maybe_unused]] static auto traingedad_cmd = v0::CmdTrainGEDAD();
     [[maybe_unused]] static auto ver_cmd = v0::CmdVer();
+    [[maybe_unused]] static auto cfglorawan_cmd = v0::CmdCfgLoRaWAN();
 
     return true;
 }
