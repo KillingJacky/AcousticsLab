@@ -484,7 +484,7 @@ static void lorawan_task(void * arg)
     }
     printf("\r\n");
     printf( "AppEUI/JoinEUI: " );
-    for( int i =0; i < 16; i++ ) {
+    for( int i =0; i < 8; i++ ) {
         printf("%02X",app_eui[i]);
     }
     printf("\r\n");
@@ -499,11 +499,13 @@ static void lorawan_task(void * arg)
     mibReq.Param.DevEui = device_eui;
     LoRaMacMibSetRequestConfirm( &mibReq );
 
+    mibReq.Type = MIB_JOIN_EUI;
+    mibReq.Param.JoinEui = app_eui;
+    LoRaMacMibSetRequestConfirm( &mibReq );
+
     mibReq.Type = MIB_APP_KEY;
     mibReq.Param.AppKey = app_key;
     LoRaMacMibSetRequestConfirm( &mibReq );
-
-
     mibReq.Type = MIB_NWK_KEY;
     mibReq.Param.NwkKey = app_key;
     LoRaMacMibSetRequestConfirm( &mibReq );
