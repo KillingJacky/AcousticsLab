@@ -65,7 +65,7 @@ static constexpr const size_t DEVICE_NAME_LENGTH_MAX = 64;
 static constexpr const char DEFAULT_DEVICE_NAME_PATH[] = ".device_name";
 static constexpr const char DEFAULT_BOOT_COUNT_PATH[] = ".boot_count";
 
-static constexpr const int GPIO_PINS[] = { 1, 2, 3, 21, 41, 42 };
+static constexpr const int GPIO_PINS[] = { 1, 2, 3, 21 };
 
 class DeviceESP32S3 final: public hal::Device
 {
@@ -83,6 +83,8 @@ public:
             gpio_set_direction(static_cast<gpio_num_t>(pin), GPIO_MODE_OUTPUT);
             gpio_set_pull_mode(static_cast<gpio_num_t>(pin), GPIO_FLOATING);
         }
+        gpio_reset_pin(GPIO_NUM_48);
+        gpio_set_direction(GPIO_NUM_48, GPIO_MODE_OUTPUT);
     }
 
     core::Status init() noexcept override
@@ -189,6 +191,7 @@ public:
             case hal::Device::GPIOOpType::Config:
                 return -ENOTSUP;
             case hal::Device::GPIOOpType::Write:
+                gpio_set_level(GPIO_NUM_48, value ? 0 : 1);
                 for (auto gpio_pin: GPIO_PINS)
                 {
                     if (pin == gpio_pin)
